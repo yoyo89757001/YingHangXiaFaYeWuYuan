@@ -15,7 +15,16 @@ public class ZhiLingBean {
     private int code;
     private int count;
     private String msg;
+    private String systemTime;
     private List<DataBean> data;
+
+    public String getSystemTime() {
+        return systemTime;
+    }
+
+    public void setSystemTime(String systemTime) {
+        this.systemTime = systemTime;
+    }
 
     public int getCode() {
         return code;

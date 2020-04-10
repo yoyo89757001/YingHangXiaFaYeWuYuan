@@ -255,6 +255,7 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
     private static final String group_name = "facepasstestx";
     private int STATE=1;
     private static boolean isR=false;
+    private String TIME=null;
 
 
 
@@ -358,6 +359,8 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
             }
         }
 
+        subjectBox.removeAll();
+
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -368,12 +371,13 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
                 cameraW = manager.getCameraWidth();
                 s1 = (float) w / (float) cameraH;
                 s2 = (float) h / (float) cameraW;
-
+                if (TIME==null)
+                    return;
                List<Subject> subjects= subjectBox.getAll();
                for (Subject subject:subjects){
                    try {
                    long times1=DateUtils.date2TimeStamp(subject.getBirthday());
-                   long times2=DateUtils.date2TimeStamp(DateUtils.timdd(System.currentTimeMillis()+""));
+                   long times2=DateUtils.date2TimeStamp(TIME);
                    if (times1<times2){
                        if (paAccessControl!=null){
                            paAccessControl.deleteFace(subject.getTeZhengMa().getBytes());
@@ -581,6 +585,10 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
 
         guanPing();//关屏
         DengUT.getInstance(baoCunBean).openLOED();
+
+
+
+
 
     }
 
@@ -1227,10 +1235,10 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
                                 // Log.d("RecognizeThread", "subject:" + subject);
 
                                 if (subject != null) {
-                                    if (subject.getBirthday()!=null){
+                                    if (subject.getBirthday()!=null && TIME!=null){
                                         try {
                                             long times1=DateUtils.date2TimeStamp(subject.getBirthday());
-                                            long times2=DateUtils.date2TimeStamp(DateUtils.timdd(System.currentTimeMillis()+""));
+                                            long times2=DateUtils.date2TimeStamp(TIME);
                                             if (times1<times2){//过期不通过
                                                 paAccessControl.deleteFace(subject.getTeZhengMa().getBytes());
                                                 subjectBox.remove(subject);
@@ -1582,8 +1590,10 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
                         List<Subject> subjects= subjectBox.getAll();
                         for (Subject subject:subjects){
                             try {
+                                if (TIME==null)
+                                    return;
                                 long times1=DateUtils.date2TimeStamp(subject.getBirthday());
-                                long times2=DateUtils.date2TimeStamp(DateUtils.timdd(System.currentTimeMillis()+""));
+                                long times2=DateUtils.date2TimeStamp(TIME);
                                 if (times1<times2){
                                     if (paAccessControl!=null){
                                         paAccessControl.deleteFace(subject.getTeZhengMa().getBytes());
@@ -1654,11 +1664,12 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
                     Gson gson = new Gson();
                     ZhiLingBean commandsBean = gson.fromJson(jsonObject, ZhiLingBean.class);
                     if (commandsBean != null && commandsBean.getCode() == 200) {
+                        TIME=commandsBean.getSystemTime();
                         for (ZhiLingBean.DataBean resultBean : commandsBean.getData()) {
                             linkedBlockingQueue.put(resultBean);
                         }
 //                        if (linkedBlockingQueue.size()==0){
-//
+
 //                        }
                       //  Log.d("MianBanJiActivity3", "linkedBlockingQueue.size():" + linkedBlockingQueue.size());
                         isGET=true;
@@ -1758,8 +1769,8 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
         });
     }
 
-//    //上传记录
-//    private void link_shuaka(String id,String name) {
+//    //拿时间
+//    private void link_time(String id,String name) {
 //        if (baoCunBean.getHoutaiDiZhi() == null || baoCunBean.getHoutaiDiZhi().equals("")) {
 //            return;
 //        }

@@ -89,7 +89,7 @@ public class BaseActivity extends AppCompatActivity implements EasyPermissions.P
         if (EasyPermissions.hasPermissions(this, perms)) {
             // 已经得到许可，就去做吧 //第一次授权成功也会走这个方法
             Log.d("BaseActivity", "成功获得权限");
-           start();
+               start();
 
 //            try {
 //                singleCertification();
