@@ -192,7 +192,7 @@ public class MyApplication extends Application implements Application.ActivityLi
         if (baoCunBean == null) {
             baoCunBean = new BaoCunBean();
             baoCunBean.setHoutaiDiZhi("http://30p73g2359.wicp.vip");
-            baoCunBean.setTouxiangzhuji("http://www.inteyeligence.com:8980/front");
+            baoCunBean.setTouxiangzhuji("http://open.inteyeligence.com/front");
             baoCunBean.setId(123456L);
             baoCunBean.setShibieFaceSize(30);
             baoCunBean.setShibieFaZhi(72f);

@@ -10,7 +10,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -116,7 +115,6 @@ import megvii.testfacepass.pa.utils.DengUT;
 import megvii.testfacepass.pa.utils.FacePassUtil;
 import megvii.testfacepass.pa.utils.FileUtil;
 import megvii.testfacepass.pa.utils.GsonUtil;
-import megvii.testfacepass.pa.utils.NV21ToBitmap;
 import megvii.testfacepass.pa.utils.SettingVar;
 import megvii.testfacepass.pa.view.GlideRoundTransform;
 import okhttp3.Call;
@@ -180,7 +178,7 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
     private final Timer timer = new Timer();
     private TimerTask task;
     private final Timer timer2 = new Timer();
-    private TimerTask task2;
+   // private TimerTask task2;
     private LinkedBlockingQueue<ZhiLingBean.DataBean> linkedBlockingQueue;
     /* 相机实例 */
     private CameraManager manager;
@@ -197,12 +195,13 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
     private int widthPixels;
     int screenState = 0;// 0 横 1 竖
     TanChuangThread tanChuangThread;
+    private ReadThread3 mReadThread3;
     // private ConcurrentHashMap<Long, Integer> concurrentHashMap = new ConcurrentHashMap<Long, Integer>();
     private int dw, dh;
     private ConcurrentHashMap<Long, Integer> concurrentHashMap = new ConcurrentHashMap<Long, Integer>();
     private Box<BaoCunBean> baoCunBeanDao = null;
     private Box<HuiFuBean> huiFuBeanBox = null;
-    private Box<DaKaBean> daKaBeanBox = null;
+   // private Box<DaKaBean> daKaBeanBox = null;
     private BaoCunBean baoCunBean = null;
     private TimeChangeReceiver timeChangeReceiver;
     private Handler mHandler;
@@ -211,7 +210,7 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
  //   private Float mCompareThres;
   //  private static String faceId = "";
    // private long feature2 = -1;
-    private NV21ToBitmap nv21ToBitmap;
+   // private NV21ToBitmap nv21ToBitmap;
     private SoundPool soundPool;
     //定义一个HashMap用于存放音频流的ID
     private HashMap<Integer, Integer> musicId = new HashMap<>();
@@ -220,7 +219,7 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
   // private ReadThread mReadThread;
     private InputStream mInputStream;
     private int w, h, cameraH, cameraW;
-    private float s1 = 0, s2 = 0;
+   // private float s1 = 0, s2 = 0;
     private Timer mTimer;//距离感应
     private TimerTask mTimerTask;//距离感应
     private int pm = 0;
@@ -244,8 +243,8 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
     private int cishu=5;
     private int jidianqi=6000;
     private Lztek lztek=null;
-    private Function mFuncs = null;
-    private int loc_readerHandle=-1;
+  //  private Function mFuncs = null;
+   // private int loc_readerHandle=-1;
     private boolean isCLOSDLED =false;
   //  private CameraPreviewData mCurrentImage;
     ArrayBlockingQueue<FacePassDetectionResult> mDetectResultQueue;
@@ -266,7 +265,7 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         huiFuBeanBox = MyApplication.myApplication.getHuiFuBeanBox();
         baoCunBeanDao = MyApplication.myApplication.getBaoCunBeanBox();
-        daKaBeanBox=MyApplication.myApplication.getDaKaBeanBox();
+      //  daKaBeanBox=MyApplication.myApplication.getDaKaBeanBox();
         baoCunBean = baoCunBeanDao.get(123456L);
         mDetectResultQueue = new ArrayBlockingQueue<FacePassDetectionResult>(5);
         mFeedFrameQueue = new ArrayBlockingQueue<FacePassImage>(1);
@@ -304,7 +303,7 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
         getWindowManager().getDefaultDisplay().getMetrics(dm);
         dw = dm.widthPixels;
         dh = dm.heightPixels;
-        nv21ToBitmap = new NV21ToBitmap(MianBanJiActivity3.this);
+      //  nv21ToBitmap = new NV21ToBitmap(MianBanJiActivity3.this);
         /* 初始化界面 */
         //  Log.d("MianBanJiActivity3", "jh:" + baoCunBean);
         //初始化soundPool,设置可容纳12个音频流，音频流的质量为5，
@@ -369,8 +368,8 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
                 h = cameraView.getMeasuredHeight();
                 cameraH = manager.getCameraheight();
                 cameraW = manager.getCameraWidth();
-                s1 = (float) w / (float) cameraH;
-                s2 = (float) h / (float) cameraW;
+             //   s1 = (float) w / (float) cameraH;
+             //   s2 = (float) h / (float) cameraW;
                 if (TIME==null)
                     return;
                List<Subject> subjects= subjectBox.getAll();
@@ -467,11 +466,11 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
                         break;
                     }
                     case 333:
-                        if (isCLOSDLED)
+                       // if (isCLOSDLED)
                         DengUT.getInstance(baoCunBean).openLOED();
                         break;
                     case 444:
-                        if (isCLOSDLED)
+                       // if (isCLOSDLED)
                         DengUT.getInstance(baoCunBean).closeLOED();
                         break;
                     case 999:
@@ -711,8 +710,6 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
         Log.d("MianBanJiActivity3", "重新开始");
         super.onResume();
 
-
-
         if (netWorkStateReceiver == null) {
             netWorkStateReceiver = new NetWorkStateReceiver();
             IntentFilter filter = new IntentFilter();
@@ -721,126 +718,143 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
         }
 
 
-//        if (baoCunBean.getDangqianChengShi2() != null && baoCunBean.getDangqianChengShi2().equals("涂鸦") && paAccessControl != null) {
-//            Sensor defaultSensor = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-//            sm.registerListener(this, defaultSensor, SensorManager.SENSOR_DELAY_NORMAL);
-//            if (mTimerTask == null) {
-//                mTimerTask = new TimerTask() {
-//                    @Override
-//                    public void run() {
-//                        if (juli > 0) {
-//                            isPM2 = true;
-//                            //有人
-//                            if (isPM) {
-//                                isPM = false;
-//                                onP1 = true;
-//                                onP2 = true;
-//                                pm = 0;
-//                                Message message = new Message();
-//                                message.what = 333;
-//                                mHandler.sendMessage(message);
-//                            }
-//                        } else {
-//                            isPM = true;
-//                            if (isPM2) {
-//                                pm++;
-//                                if (pm == 8) {
-//                                    Message message = new Message();
-//                                    message.what = 444;
-//                                    mHandler.sendMessage(message);
-//                                    isPM2 = false;
-//                                    onP1 = false;
-//                                    onP2 = false;
-//                                    pm = 0;
-//
-//                                    if (DengUT.isOPENRed) {
-//                                        DengUT.isOPENRed = false;
-//                                        DengUT.getInstance(baoCunBean).closeRed();
-//                                    }
-//                                    if (DengUT.isOPENGreen) {
-//                                        DengUT.isOPENGreen = false;
-//                                        DengUT.getInstance(baoCunBean).closeGreen();
-//                                    }
-//                                    if (DengUT.isOPEN) {
-//                                        DengUT.isOPEN = false;
-//                                        DengUT.getInstance(baoCunBean).closeWrite();
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                };
-//            }
-//            if (mTimer == null) {
-//                mTimer = new Timer();
-//            }
-//            mTimer.schedule(mTimerTask, 0, 1000);
-//        }
-
-
-            if (lztek!=null){
-                new Thread(new Runnable() {
+        if (jiqiType==2) {//涂鸦
+            Sensor defaultSensor = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+            sm.registerListener(this, defaultSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            if (mTimerTask == null) {
+                mTimerTask = new TimerTask() {
                     @Override
                     public void run() {
-                        while (true) {
-                            SystemClock.sleep(160);
-                            final int value = lztek.getGpioValue(218);
-                           // Log.d("MianBanJiActivity3", "value:" + value);
-                            if (value==1){//有人
-                                isCLOSDLED=true;
-                                   // Log.d("MianBanJiActivity3", "value:" + value);
-                                    isR=true;
+                        if (juli > 0 && juli<9000) {
+                            isPM2 = true;
+                            //有人
+                            if (isPM) {
+                                isPM = false;
+                                onP1 = true;
+                                onP2 = true;
+                                pm = 0;
+                                Message message = new Message();
+                                message.what = 333;
+                                mHandler.sendMessage(message);
+                            }
+                        } else {
+                            isPM = true;
+                            if (isPM2) {
+                                pm++;
+                                if (pm == 8) {
                                     Message message = new Message();
-                                    message.what = 333;
+                                    message.what = 444;
                                     mHandler.sendMessage(message);
-
-                                    if (task != null)
-                                        task.cancel();
-                                    SystemClock.sleep(2000);
-
-                            }else {//没人
-                                if (isR){
-                                    isR=false;
-                                  //  Log.d("MianBanJiActivity3", "valuettttt:" + value);
-                                    //启动定时器或重置定时器
-                                    if (task != null) {
-                                        task.cancel();
-                                        //timer.cancel();
-                                        task = new TimerTask() {
-                                            @Override
-                                            public void run() {
-                                                Message message = new Message();
-                                                message.what = 444;
-                                                mHandler.sendMessage(message);
-                                            }
-                                        };
-                                        try {
-                                            timer.schedule(task, 16000);
-                                        }catch (Exception e){
-                                            e.printStackTrace();
-                                        }
-                                    } else {
-                                        task = new TimerTask() {
-                                            @Override
-                                            public void run() {
-                                                Message message = new Message();
-                                                message.what = 444;
-                                                mHandler.sendMessage(message);
-                                            }
-                                        };
-                                        try {
-                                            timer.schedule(task, 16000);
-                                        }catch (Exception e){
-                                            e.printStackTrace();
-                                        }
+                                    isPM2 = false;
+                                    onP1 = false;
+                                    onP2 = false;
+                                    pm = 0;
+                                    if (DengUT.isOPENRed) {
+                                        DengUT.isOPENRed = false;
+                                        DengUT.getInstance(baoCunBean).closeRed();
+                                    }
+                                    if (DengUT.isOPENGreen) {
+                                        DengUT.isOPENGreen = false;
+                                        DengUT.getInstance(baoCunBean).closeGreen();
+                                    }
+                                    if (DengUT.isOPEN) {
+                                        DengUT.isOPEN = false;
+                                        DengUT.getInstance(baoCunBean).closeWrite();
                                     }
                                 }
                             }
                         }
                     }
-                }).start();
+                };
             }
+            if (mTimer == null) {
+                mTimer = new Timer();
+            }
+            mTimer.schedule(mTimerTask, 0, 1000);
+        }
 
+        if (lztek!=null){
+            mReadThread3 = new ReadThread3();
+            mReadThread3.start();
+        }
+    }
+
+    private static boolean isRS=false;
+    private class ReadThread3 extends Thread {
+        boolean isIterrupt;
+        @Override
+        public void run() {
+            super.run();
+            while (!isIterrupt) {
+                if (lztek!=null){
+                    SystemClock.sleep(160);
+                    final int value = lztek.getGpioValue(218);
+                    // Log.d("MianBanJiActivity3", "value:" + value);
+                    if (value==1){//有人
+                        isCLOSDLED=true;
+                        // Log.d("MianBanJiActivity3", "value:" + value);
+                        isRS=true;
+                        Message message = new Message();
+                        message.what = 333;
+                        mHandler.sendMessage(message);
+
+                        if (task != null)
+                            task.cancel();
+                        SystemClock.sleep(2000);
+
+                    }else {//没人
+                        if (isRS){
+                            isRS=false;
+                            //  Log.d("MianBanJiActivity3", "valuettttt:" + value);
+                            //启动定时器或重置定时器
+                            if (task != null) {
+                                task.cancel();
+                                //timer.cancel();
+                                task = new TimerTask() {
+                                    @Override
+                                    public void run() {
+                                        if (isCLOSDLED){
+                                            Message message = new Message();
+                                            message.what = 444;
+                                            mHandler.sendMessage(message);
+                                        }
+                                    }
+                                };
+                                try {
+                                    timer.schedule(task, 10000);
+                                }catch (Exception e){
+                                    e.printStackTrace();
+                                }
+                            } else {
+                                task = new TimerTask() {
+                                    @Override
+                                    public void run() {
+                                        if (isCLOSDLED){
+                                            Message message = new Message();
+                                            message.what = 444;
+                                            mHandler.sendMessage(message);
+                                        }
+                                    }
+                                };
+                                try {
+                                    timer.schedule(task, 10000);
+                                }catch (Exception e){
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+
+                }
+
+
+            }
+        }
+        @Override
+        public void interrupt() {
+            isIterrupt = true;
+            super.interrupt();
+        }
     }
 
 
@@ -1464,6 +1478,10 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
             tanChuangThread.isRing = true;
             tanChuangThread.interrupt();
         }
+        if (mReadThread3 != null) {
+            mReadThread3.isIterrupt=true;
+            mReadThread3.interrupt();
+        }
 
         if (mRecognizeThread != null) {
             mRecognizeThread.isInterrupt = true;
@@ -1483,8 +1501,8 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
         timer.cancel();
 
 
-        if (task2 != null)
-            task2.cancel();
+       // if (task2 != null)
+        //    task2.cancel();
         timer2.cancel();
 
 
