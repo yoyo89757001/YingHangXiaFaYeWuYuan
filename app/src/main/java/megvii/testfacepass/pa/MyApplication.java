@@ -16,6 +16,7 @@ import com.tencent.bugly.Bugly;
 import java.io.File;
 import java.io.IOException;
 import java.security.InvalidParameterException;
+import java.util.ArrayList;
 import java.util.Objects;
 import io.objectbox.Box;
 import io.objectbox.BoxStore;
@@ -37,8 +38,7 @@ import megvii.testfacepass.pa.beans.Subject;
 import megvii.testfacepass.pa.dialogall.CommonData;
 import megvii.testfacepass.pa.dialogall.CommonDialogService;
 import megvii.testfacepass.pa.dialogall.ToastUtils;
-
-
+import megvii.testfacepass.pa.utils.UnCeHandler;
 
 
 /**
@@ -46,6 +46,9 @@ import megvii.testfacepass.pa.dialogall.ToastUtils;
  */
 
 public class MyApplication extends Application implements Application.ActivityLifecycleCallbacks {
+    ArrayList<Activity> list = new ArrayList<Activity>();
+    public static Context context;
+
     private static FacePassHandler facePassHandler=null;
     public static MyApplication myApplication;
     //private Box<ChengShiIDBean> chengShiIDBeanBox=null;
@@ -115,8 +118,8 @@ public class MyApplication extends Application implements Application.ActivityLi
     public void onCreate() {
         super.onCreate();
         myApplication = this;
+        init();
         BoxStore mBoxStore = MyObjectBox.builder().androidContext(this).build();
-
         Bugly.init(getApplicationContext(), "772050836a", false);
 
       //  Log.d("MyApplication","机器码"+ FileUtil.getSerialNumber(this) == null ? FileUtil.getIMSI() : FileUtil.getSerialNumber(this));
@@ -191,19 +194,19 @@ public class MyApplication extends Application implements Application.ActivityLi
       BaoCunBean  baoCunBean = mBoxStore.boxFor(BaoCunBean.class).get(123456L);
         if (baoCunBean == null) {
             baoCunBean = new BaoCunBean();
-            baoCunBean.setHoutaiDiZhi("http://30p73g2359.wicp.vip");
+            baoCunBean.setHoutaiDiZhi("http://106.53.20.240");
             baoCunBean.setTouxiangzhuji("http://open.inteyeligence.com/front");
             baoCunBean.setId(123456L);
             baoCunBean.setShibieFaceSize(30);
             baoCunBean.setShibieFaZhi(72f);
             baoCunBean.setRuKuFaceSize(50);
-            baoCunBean.setRuKuMoHuDu(0.3f);
+            baoCunBean.setRuKuMoHuDu(0.7f);
             baoCunBean.setHuoTiFZ(72);
             baoCunBean.setMima(123456);
             baoCunBean.setYusu(5);
             baoCunBean.setYudiao(5);
             baoCunBean.setMima2(123456);
-            baoCunBean.setJihuoma("0000-0000-0000-0000-0000");
+            baoCunBean.setJihuoma("1266-3264-3886-6563-0724");
             baoCunBean.setHuoTi(false);
             baoCunBean.setDangqianShiJian("2");
             baoCunBean.setTianQi(false);
@@ -216,7 +219,6 @@ public class MyApplication extends Application implements Application.ActivityLi
             mBoxStore.boxFor(BaoCunBean.class).put(baoCunBean);
         }
 
-
         FileDownloader.setupOnApplicationOnCreate(this)
                 .connectionCreator(new FileDownloadUrlConnection
                         .Creator(new FileDownloadUrlConnection.Configuration()
@@ -228,8 +230,39 @@ public class MyApplication extends Application implements Application.ActivityLi
     }
 
 
+    public void init(){
+        //设置该CrashHandler为程序的默认处理器
+        UnCeHandler catchExcep = new UnCeHandler(this);
+        Thread.setDefaultUncaughtExceptionHandler(catchExcep);
+    }
 
-  //  public Box<TodayBean> getTodayBeanBox(){
+    /**
+     * Activity关闭时，删除Activity列表中的Activity对象*/
+    public void removeActivity(Activity a){
+        list.remove(a);
+    }
+
+    /**
+     * 向Activity列表中添加Activity对象*/
+    public void addActivity(Activity a){
+        list.add(a);
+    }
+
+    /**
+     * 关闭Activity列表中的所有Activity*/
+    public void finishActivity(){
+        for (Activity activity : list) {
+            if (null != activity) {
+                activity.finish();
+            }
+        }
+        //杀死该应用进程
+        android.os.Process.killProcess(android.os.Process.myPid());
+    }
+
+
+
+    //  public Box<TodayBean> getTodayBeanBox(){
       //  return todayBeanBox;
    // }
 

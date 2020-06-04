@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -83,8 +84,10 @@ import mcv.facepass.FacePassException;
 import mcv.facepass.FacePassHandler;
 import mcv.facepass.types.FacePassAddFaceResult;
 import mcv.facepass.types.FacePassDetectionResult;
+import mcv.facepass.types.FacePassFace;
 import mcv.facepass.types.FacePassImage;
 import mcv.facepass.types.FacePassImageType;
+import mcv.facepass.types.FacePassMouthOccAttr;
 import mcv.facepass.types.FacePassRecognitionResult;
 import mcv.facepass.types.FacePassRecognitionResultType;
 import megvii.testfacepass.pa.MyApplication;
@@ -108,7 +111,7 @@ import megvii.testfacepass.pa.camera.CameraPreviewData;
 import megvii.testfacepass.pa.dialog.MiMaDialog3;
 import megvii.testfacepass.pa.dialog.MiMaDialog4;
 import megvii.testfacepass.pa.tuisong_jg.MyServeInterface;
-import megvii.testfacepass.pa.tuisong_jg.ServerManager;
+
 import megvii.testfacepass.pa.utils.BitmapUtil;
 import megvii.testfacepass.pa.utils.DateUtils;
 import megvii.testfacepass.pa.utils.DengUT;
@@ -126,6 +129,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import top.zibin.luban.Luban;
 
 
 public class MianBanJiActivity3 extends Activity implements CameraManager.CameraListener,MyServeInterface, SensorEventListener {
@@ -153,7 +157,7 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
     private NfcAdapter mNfcAdapter;
     private PendingIntent mPendingIntent;
     private Box<IDCardBean> idCardBeanBox = MyApplication.myApplication.getIdCardBeanBox();
-    private ServerManager serverManager;
+
    // private Bitmap msrBitmap = null;
     private RequestOptions myOptions = new RequestOptions()
             .fitCenter()
@@ -253,7 +257,7 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
     FeedFrameThread mFeedFrameThread;
     private static final String group_name = "facepasstestx";
     private int STATE=1;
-    private static boolean isR=false;
+    //private static boolean isR=false;
     private String TIME=null;
 
 
@@ -269,6 +273,8 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
         baoCunBean = baoCunBeanDao.get(123456L);
         mDetectResultQueue = new ArrayBlockingQueue<FacePassDetectionResult>(5);
         mFeedFrameQueue = new ArrayBlockingQueue<FacePassImage>(1);
+
+        MyApplication.myApplication.addActivity(this);
 
         if (baoCunBean.getDangqianChengShi2()!=null){
             switch (baoCunBean.getDangqianChengShi2()){
@@ -316,14 +322,13 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
                 .setAudioAttributes(abs)   //完全可以设置为null
                 .build();
         //通过load方法加载指定音频流，并将返回的音频ID放入musicId中
-        musicId.put(1, soundPool.load(this, R.raw.tongguo, 1));
-        musicId.put(2, soundPool.load(this, R.raw.wuquanxian, 1));
-        musicId.put(3, soundPool.load(this, R.raw.xinxibupipei, 1));
-        musicId.put(4, soundPool.load(this, R.raw.xianshibie, 1));
-        musicId.put(5, soundPool.load(this, R.raw.shuaka, 1));
+        musicId.put(1, soundPool.load(this, R.raw.yanzhengtongguo, 1));//验证通过
+        musicId.put(2, soundPool.load(this, R.raw.moshengren, 1));//陌生人
+        musicId.put(3, soundPool.load(this, R.raw.meiyouxinxi, 1));//没有查询到信息
+        musicId.put(4, soundPool.load(this, R.raw.meiyouguoqishijian, 1));//没有过期时间
+        musicId.put(5, soundPool.load(this, R.raw.xinxiguoqi, 1));//信息过期
         musicId.put(6, soundPool.load(this, R.raw.jilushibai, 1));//上传记录失败 请重试
         musicId.put(7, soundPool.load(this, R.raw.wangluobutong, 1));//网络不通 请检查网络
-        musicId.put(8, soundPool.load(this, R.raw.moshengren, 1));//陌生人
         sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         try {
             lztek=Lztek.create(MyApplication.myApplication);
@@ -335,9 +340,9 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
 
         initView();
 
-        serverManager = new ServerManager(FileUtil.getIPAddress(getApplicationContext()), baoCunBean.getPort());
-        serverManager.setMyServeInterface(MianBanJiActivity3.this);
-        serverManager.startServer();
+//        serverManager = new ServerManager(FileUtil.getIPAddress(getApplicationContext()), baoCunBean.getPort());
+//        serverManager.setMyServeInterface(MianBanJiActivity3.this);
+//        serverManager.startServer();
 
         if (baoCunBean != null) {
             try {
@@ -584,9 +589,6 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
 
         guanPing();//关屏
         DengUT.getInstance(baoCunBean).openLOED();
-
-
-
 
 
     }
@@ -967,28 +969,54 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
                             DengUT.isOPENRed = false;
                             DengUT.isOpenDOR = false;
                             DengUT.getInstance(baoCunBean).closeWrite();
-                            showUIResult(1,"","","");
+                            showUIResult(1,"","");
+                        }
+
+                    }else {
+
+                        final FacePassFace[] bufferFaceList = detectionResult.faceList;
+                        FacePassMouthOccAttr attr=bufferFaceList[0].mouthOccAttr;
+                        if (attr.is_valid){//有效
+                            String kouzhao="";
+                            switch (attr.mouth_occ_status){
+                                case 0:
+                                    kouzhao="未佩戴口罩";
+                                    break;
+                                case 1:
+                                    kouzhao="面具遮挡";
+                                    break;
+                                case 2:
+                                    kouzhao="已佩戴口罩";
+                                    break;
+                                case 3:
+                                    kouzhao="其他遮挡";
+                                    break;
+                                default:
+                                    kouzhao="";
+                                    break;
+                            }
+                            String finalKouzhao = kouzhao;
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    tvFaceTips_Ir.setText(finalKouzhao);
+                                }
+                            });
                         }
                     }
-                    //else {
-                       // Log.d("FeedFrameThread", "detectionResult.faceList.length:" + detectionResult.faceList.length);
-                    //    Log.d("FeedFrameThread", "有人");
 
-                 //   }
                     /*离线模式，将识别到人脸的，message不为空的result添加到处理队列中*/
                     if (detectionResult != null && detectionResult.message.length != 0) {
                       //  Log.d("FeedFrameThread", "插入");
-
                         if (!DengUT.isOPEN) {
                             DengUT.isOPEN = true;
                             DengUT.getInstance(baoCunBean).openWrite();
-                            showUIResult(2,"","","");
+                            showUIResult(2,"","");
                         }
                         mDetectResultQueue.offer(detectionResult);
                         //   Log.d("ggggg", "1 mDetectResultQueue.size = " + mDetectResultQueue.size());
                     }
                     //     }
-
                 } catch (InterruptedException | FacePassException e) {
                     e.printStackTrace();
                 }
@@ -1027,8 +1055,10 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
                             try {
                                 paAccessControl.deleteFace(subject.getTeZhengMa().getBytes());
                                 subjectBox.remove(subject);
+                                continue;
                             }catch (Exception e){
                                 e.printStackTrace();
+                                continue;
                             }
                         }else {
                             continue;
@@ -1046,7 +1076,19 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
                     }
                     FacePassAddFaceResult detectResult = null;
                     if (bitmap != null) {
-                        detectResult = paAccessControl.addFace(bitmap);
+                        BitmapUtil.saveBitmapToSD(bitmap, MyApplication.SDPATH3,  "aaabbb.jpg");
+                        // File filef = new File(MyApplication.SDPATH3 + File.separator +  "aaabbb.png");
+                        // Log.d("TanChuangThread",  "未压缩前:filef.length():" + filef.length());
+                        File file = Luban.with(MianBanJiActivity3.this)
+                                .load(MyApplication.SDPATH3 + File.separator +  "aaabbb.jpg")
+                                .ignoreBy(600)
+                                .setTargetDir(MyApplication.SDPATH3 + File.separator)
+                                .get(MyApplication.SDPATH3 + File.separator +  "aaabbb.jpg");
+                        if (file==null){
+                            continue;
+                        }
+
+                        detectResult = paAccessControl.addFace(BitmapFactory.decodeFile(file.getAbsolutePath()));
                         //  Log.d("TanChuangThread", "detectResult:" + detectResult);
                         if (detectResult != null && detectResult.result == 0) {
                             // BitmapUtil.saveBitmapToSD(bitmap, MyApplication.SDPATH3, commandsBean.getId() + ".png");
@@ -1064,9 +1106,8 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
                                 subject.setBirthday(commandsBean.getFaceVerifyDate());
                                 subject.setId(System.currentTimeMillis());
                                 subject.setName(commandsBean.getName());
-
-                                subjectBox.put(subject);
                                 paAccessControl.bindGroup(group_name, faceToken);
+                                subjectBox.put(subject);
                                 Log.d("MyReceiver", "单个员工入库成功" + subject.toString());
                                 HuiFuBean huiFuBean = new HuiFuBean(System.currentTimeMillis(), commandsBean.getId(),
                                         "", "1", "成功", commandsBean.getEmpId(), JHM);
@@ -1083,6 +1124,7 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
                                     "", "0", "图片质量不合格", commandsBean.getEmpId(), JHM);
                               huiFuBeanBox.put(huiFuBean);
                         }
+                        Log.d("TanChuangThread", "file.delete():" + file.delete());
                     } else {
                          HuiFuBean huiFuBean = new HuiFuBean(System.currentTimeMillis(), commandsBean.getId(),
                               "", "0", "图片下载失败", commandsBean.getEmpId(), JHM);
@@ -1215,7 +1257,7 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
             }
 
         }
-        showUIResult(1,"","","");
+        showUIResult(1,"","");
 
     }
 
@@ -1256,10 +1298,12 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
                                             if (times1<times2){//过期不通过
                                                 paAccessControl.deleteFace(subject.getTeZhengMa().getBytes());
                                                 subjectBox.remove(subject);
+                                                soundPool.play(musicId.get(5), 1, 1, 0, 0, 1);
                                                 continue;
                                             }
                                         }catch (Exception e){e.printStackTrace();}
                                     }else {//没有日期，不执行
+                                        soundPool.play(musicId.get(4), 1, 1, 0, 0, 1);
                                         continue;
                                     }
 
@@ -1274,56 +1318,58 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
                                         DengUT.isOPENGreen = true;
                                         DengUT.getInstance(baoCunBean).openGreen();
                                     }
-                                    DengUT.isOPEN = true;
+
 
                                   //  long time=System.currentTimeMillis();
-                                    for (int i = 0; i < detectionResult.faceList.length; i++) {
-                                        FacePassImage images = detectionResult.images[i];
-                                        if (images.trackId == result.trackId) {
-                                       //     Log.d("RecognizeThread", "detectionResult.faceList[i].mouthOccAttr.is_valid:" + detectionResult.faceList[i].mouthOccAttr.is_valid);
-                                         //   Log.d("RecognizeThread", "detectionResult.faceList[i].mouthOccAttr.mouth_occ_status:" + detectionResult.faceList[i].mouthOccAttr.mouth_occ_status);
-                                            if (detectionResult.faceList[i].mouthOccAttr.is_valid){
-                                                String kouzhao="";
-                                                switch (detectionResult.faceList[i].mouthOccAttr.mouth_occ_status){
-                                                    case 0:
-                                                        kouzhao="未佩戴口罩";
-                                                        break;
-                                                    case 1:
-                                                        kouzhao="面具遮挡";
-                                                        break;
-                                                    case 2:
-                                                        kouzhao="已佩戴口罩";
-                                                        break;
-                                                    case 3:
-                                                        kouzhao="其他遮挡";
-                                                        break;
-                                                    default:
-                                                         kouzhao="";
-                                                        break;
-                                                }
-                                                showUIResult(4,subject.getName(),subject.getDepartmentName(),kouzhao);
-                                            }
-                                           // final Bitmap fileBitmap = nv21ToBitmap.nv21ToBitmap(images.image, images.width, images.height);
-                                          //  String paths = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ruitongzipmbj";
-                                          //  boolean tt = nv21ToBitmap.saveBitmap(fileBitmap, paths, time + ".png");
-                                            link_shangchuanshualian(subject.getSid(), null, "1");
-                                          //  if (tt) {
-                                           //     subject.setZpPath(paths + File.separator + time + ".png");
-                                           //     Log.d("RecognizeThread", "subjectBox.put(subject):" + subjectBox.put(subject));
-                                         //   }
-                                            break;
-                                        }
-                                    }
-                                    showUIResult(4,subject.getName(),subject.getDepartmentName(),"");
+//                                    for (int i = 0; i < detectionResult.faceList.length; i++) {
+//                                        FacePassImage images = detectionResult.images[i];
+//                                        if (images.trackId == result.trackId) {
+//                                       //     Log.d("RecognizeThread", "detectionResult.faceList[i].mouthOccAttr.is_valid:" + detectionResult.faceList[i].mouthOccAttr.is_valid);
+//                                         //   Log.d("RecognizeThread", "detectionResult.faceList[i].mouthOccAttr.mouth_occ_status:" + detectionResult.faceList[i].mouthOccAttr.mouth_occ_status);
+////                                            if (detectionResult.faceList[i].mouthOccAttr.is_valid){
+////                                                String kouzhao="";
+////                                                switch (detectionResult.faceList[i].mouthOccAttr.mouth_occ_status){
+////                                                    case 0:
+////                                                        kouzhao="未佩戴口罩";
+////                                                        break;
+////                                                    case 1:
+////                                                        kouzhao="面具遮挡";
+////                                                        break;
+////                                                    case 2:
+////                                                        kouzhao="已佩戴口罩";
+////                                                        break;
+////                                                    case 3:
+////                                                        kouzhao="其他遮挡";
+////                                                        break;
+////                                                    default:
+////                                                         kouzhao="";
+////                                                        break;
+////                                                }
+////
+////                                            }
+//                                            showUIResult(4,subject.getName(),subject.getDepartmentName());
+//                                           // final Bitmap fileBitmap = nv21ToBitmap.nv21ToBitmap(images.image, images.width, images.height);
+//                                          //  String paths = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ruitongzipmbj";
+//                                          //  boolean tt = nv21ToBitmap.saveBitmap(fileBitmap, paths, time + ".png");
+//
+//                                          //  if (tt) {
+//                                           //     subject.setZpPath(paths + File.separator + time + ".png");
+//                                           //     Log.d("RecognizeThread", "subjectBox.put(subject):" + subjectBox.put(subject));
+//                                         //   }
+//                                            break;
+//                                        }
+//                                    }
+                                    link_shangchuanshualian(subject.getSid(), null, "1");
+                                    showUIResult(4,subject.getName(),"验证通过!");
                                  //   msrBitmap = nv21ToBitmap.nv21ToBitmap(result.feedback.rgbImage.image, result.feedback.rgbImage.width, result.feedback.rgbImage.height);
+                                    DengUT.isOPEN = true;
 
                                 } else {
+                                    soundPool.play(musicId.get(3), 1, 1, 0, 0, 1);
                                     EventBus.getDefault().post("没有查询到人员信息");
                                 }
-
                             } else {
-
-                                Log.d("RecognizeThread", "未识别");
+                              //  Log.d("RecognizeThread", "未识别");
                                 //未识别的
                                 // 防止concurrentHashMap 数据过多 ,超过一定数据 删除没用的
                                 if (concurrentHashMap.size() > 10) {
@@ -1341,9 +1387,9 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
                                    // tID = result.trackId;
                                     isLink = true;
                                   //  msrBitmap = nv21ToBitmap.nv21ToBitmap(result.feedback.rgbImage.image, result.feedback.rgbImage.width, result.feedback.rgbImage.height);
-                                    if (!baoCunBean.isMsrPanDing()){
-                                        return;
-                                    }
+//                                    if (!baoCunBean.isMsrPanDing()){
+//                                        return;
+//                                    }
                                   //  Subject subject1 = new Subject();
                                     // subject1.setW(bitmap.getWidth());
                                     // subject1.setH(bitmap.getHeight());
@@ -1360,53 +1406,56 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
 //                                    message2.obj = subject1;
 //                                    mHandler.sendMessage(message2);
 
-                                    soundPool.play(musicId.get(8), 1, 1, 0, 0, 1);
+                                    soundPool.play(musicId.get(2), 1, 1, 0, 0, 1);
 
                                     if (!DengUT.isOPENRed) {
                                         DengUT.isOPENRed = true;
                                         DengUT.getInstance(baoCunBean).openRed();
                                     }
-                                    DengUT.isOPEN = true;
+
 
                                   //  long time=System.currentTimeMillis();
-                                    for (int i = 0; i < detectionResult.faceList.length; i++) {
-                                        FacePassImage images = detectionResult.images[i];
-                                        if (images.trackId == result.trackId) {
-                                        //    Log.d("RecognizeThread", "detectionResult.faceList[i].mouthOccAttr.is_valid:" + detectionResult.faceList[i].mouthOccAttr.is_valid);
-                                         //   Log.d("RecognizeThread", "detectionResult.faceList[i].mouthOccAttr.mouth_occ_status:" + detectionResult.faceList[i].mouthOccAttr.mouth_occ_status);
-                                            if (detectionResult.faceList[i].mouthOccAttr.is_valid){
-                                                String kouzhao="";
-                                                switch (detectionResult.faceList[i].mouthOccAttr.mouth_occ_status){
-                                                    case 0:
-                                                        kouzhao="未佩戴口罩";
-                                                        break;
-                                                    case 1:
-                                                        kouzhao="面具遮挡";
-                                                        break;
-                                                    case 2:
-                                                        kouzhao="已佩戴口罩";
-                                                        break;
-                                                    case 3:
-                                                        kouzhao="其他遮挡";
-                                                        break;
-                                                    default:
-                                                        kouzhao="";
-                                                        break;
-                                                }
-                                                showUIResult(3,"陌生人","",kouzhao);
-                                            }
-                                         //   final Bitmap fileBitmap = nv21ToBitmap.nv21ToBitmap(images.image, images.width, images.height);
-                                            //  String paths = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ruitongzipmbj";
-                                            //  boolean tt = nv21ToBitmap.saveBitmap(fileBitmap, paths, time + ".png");
-                                         //   link_shangchuanshualian(subject.getSid(), fileBitmap, subject.getPeopleType() + "");
-                                            //  if (tt) {
-                                            //     subject.setZpPath(paths + File.separator + time + ".png");
-                                            //     Log.d("RecognizeThread", "subjectBox.put(subject):" + subjectBox.put(subject));
-                                            //   }
-                                            break;
-                                        }
-                                    }
-                                    showUIResult(3,"陌生人","","");
+//                                    for (int i = 0; i < detectionResult.faceList.length; i++) {
+//                                        FacePassImage images = detectionResult.images[i];
+//                                        if (images.trackId == result.trackId) {
+//                                        //    Log.d("RecognizeThread", "detectionResult.faceList[i].mouthOccAttr.is_valid:" + detectionResult.faceList[i].mouthOccAttr.is_valid);
+//                                         //   Log.d("RecognizeThread", "detectionResult.faceList[i].mouthOccAttr.mouth_occ_status:" + detectionResult.faceList[i].mouthOccAttr.mouth_occ_status);
+//                                            if (detectionResult.faceList[i].mouthOccAttr.is_valid){
+//                                                String kouzhao="";
+//                                                switch (detectionResult.faceList[i].mouthOccAttr.mouth_occ_status){
+//                                                    case 0:
+//                                                        kouzhao="未佩戴口罩";
+//                                                        break;
+//                                                    case 1:
+//                                                        kouzhao="面具遮挡";
+//                                                        break;
+//                                                    case 2:
+//                                                        kouzhao="已佩戴口罩";
+//                                                        break;
+//                                                    case 3:
+//                                                        kouzhao="其他遮挡";
+//                                                        break;
+//                                                    default:
+//                                                        kouzhao="";
+//                                                        break;
+//                                                }
+//                                                showUIResult(3,"陌生人","",kouzhao);
+//                                            }
+//                                         //   final Bitmap fileBitmap = nv21ToBitmap.nv21ToBitmap(images.image, images.width, images.height);
+//                                            //  String paths = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ruitongzipmbj";
+//                                            //  boolean tt = nv21ToBitmap.saveBitmap(fileBitmap, paths, time + ".png");
+//                                         //   link_shangchuanshualian(subject.getSid(), fileBitmap, subject.getPeopleType() + "");
+//                                            //  if (tt) {
+//                                            //     subject.setZpPath(paths + File.separator + time + ".png");
+//                                            //     Log.d("RecognizeThread", "subjectBox.put(subject):" + subjectBox.put(subject));
+//                                            //   }
+//                                            break;
+//                                        }
+//                                    }
+                                    showUIResult(3,"陌生人","");
+                                    DengUT.isOPEN = true;
+
+
                                     //   msrBitmap = nv21ToBitmap.nv21ToBitmap(result.feedback.rgbImage.image, result.feedback.rgbImage.width, result.feedback.rgbImage.height);
                                     //   Log.d("RecognizeThread", "入库"+tID);
                                 }
@@ -1511,6 +1560,8 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
         DengUT.getInstance(baoCunBean).closeRed();
 
         super.onDestroy();
+
+        MyApplication.myApplication.removeActivity(this);
     }
 
     private static final int REQUEST_CODE_CHOOSE_PICK = 1;
@@ -1632,10 +1683,15 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
                             link_get_zhiling();
                         }
                     }
-
-                    if (baoCunBean.getHoutaiDiZhi() != null && !baoCunBean.getHoutaiDiZhi().equals("")) {
-                        link_infoSync();
-                    }
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            SystemClock.sleep(20000);
+                            if (baoCunBean.getHoutaiDiZhi() != null && !baoCunBean.getHoutaiDiZhi().equals("")) {
+                                link_infoSync();
+                            }
+                        }
+                    }).start();
 
                     break;
                 case Intent.ACTION_TIME_CHANGED:
@@ -1719,7 +1775,6 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
         }
         array.put(object);
 
-
         Log.d("MianBanJiActivity3", "上传记录：" + array.toString());
         RequestBody body = RequestBody.create(array.toString(), JSON);
       //  Log.d("AllConnects", baoCunBean.getHoutaiDiZhi());
@@ -1745,12 +1800,9 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
             @Override
             public void onFailure(Call call, IOException e) {
                 Log.d("AllConnects", "请求失败" + e.getMessage());
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        soundPool.play(musicId.get(6), 1, 1, 0, 0, 1);
-                    }
-                });
+
+                soundPool.play(musicId.get(7), 1, 1, 0, 0, 1);
+
             }
 
             @Override
@@ -1781,7 +1833,6 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
                             soundPool.play(musicId.get(6), 1, 1, 0, 0, 1);
                         }
                     });
-
                 }
             }
         });
@@ -2134,7 +2185,7 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
      *
      * @param state 状态 1 初始状态  2 识别中,出现提示语  3 识别失败  4 识别成功
      */
-    protected void showUIResult(final int state, final String name, final String detectFaceTime,String kouzhao) {
+    protected void showUIResult(final int state, final String name, final String detectFaceTime) {
         if (state==STATE){
             return;
         }else {
@@ -2143,7 +2194,7 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-              //  Log.d("MianBanJiActivity3", "state:" + state);
+                //  Log.d("MianBanJiActivity3", "state:" + state);
                 switch (state) {
                     case 1: {//初始状态
                         layout_true_gif_Ir.setVisibility(View.INVISIBLE);//蓝色图片动画
@@ -2192,7 +2243,7 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
                         tvFaceTips_Ir.setVisibility(View.VISIBLE);//识别提示
                         tvName_Ir.setText("");
                         tvTime_Ir.setText("无权限通过,请重试");
-                        tvFaceTips_Ir.setText(kouzhao);
+                        //   tvFaceTips_Ir.setText(kouzhao);
                         break;
                     }
                     case 4: {//识别成功
@@ -2208,13 +2259,14 @@ public class MianBanJiActivity3 extends Activity implements CameraManager.Camera
                         tvTime_Ir.setVisibility(View.VISIBLE);//时间
                         tvFaceTips_Ir.setVisibility(View.VISIBLE);//识别提示
                         tvName_Ir.setText(name);
-                        tvTime_Ir.setText("");
-                        tvFaceTips_Ir.setText(kouzhao);
+                        tvTime_Ir.setText(detectFaceTime);
+                        //   tvFaceTips_Ir.setText(kouzhao);
                         break;
                     }
                 }
             }
         });
     }
+
 
 }

@@ -70,9 +70,16 @@ public class BaseActivity extends AppCompatActivity implements EasyPermissions.P
         obj = new AuthApi();
         mSharedPreferences = getSharedPreferences("SP", Context.MODE_PRIVATE);
         methodRequiresTwoPermission();
+        MyApplication.myApplication.addActivity(this);
+
+    }
 
 
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        MyApplication.myApplication.removeActivity(this);
     }
 
     private final int RC_CAMERA_AND_LOCATION=10000;
