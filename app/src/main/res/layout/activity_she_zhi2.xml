@@ -156,7 +156,7 @@
                     android:layout_toRightOf="@+id/im12"
                     android:layout_marginLeft="16px"
                     android:textColor="#6c020202"
-                    android:text="设置端口号"
+                    android:text="设置GPIO口"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
 
@@ -1078,6 +1078,17 @@
                 android:background="#F5F5F5"
                 android:layout_width="match_parent"
                 android:layout_height="16dp"/>
+
+            <TextView
+                android:textColor="@color/blake"
+                android:textSize="14sp"
+                android:id="@+id/xueliehao"
+                android:gravity="center"
+                android:text="序列号:"
+                android:textIsSelectable="true"
+                android:layout_marginTop="12dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
 
             <Button
                 android:text="退 出"

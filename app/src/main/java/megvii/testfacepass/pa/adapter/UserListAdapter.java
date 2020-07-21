@@ -68,10 +68,10 @@ public class UserListAdapter extends BaseAdapter {
     @Override
     public int getCount() {
         if (mGroupNames==null || mGroupNames.size()==0 || null==mGroupNames.get(0)){
-            Log.d("UserListAdapter", "mGroupNames.size():000");
+           // Log.d("UserListAdapter", "mGroupNames.size():000");
             return 0;
         }else {
-            Log.d("UserListAdapter", "mGroupNames.size():" + mGroupNames.size());
+          //  Log.d("UserListAdapter", "mGroupNames.size():" + mGroupNames.size());
             return mGroupNames.size();
         }
 
@@ -119,11 +119,9 @@ public class UserListAdapter extends BaseAdapter {
         });
 
         holder.groupNameTv.setText(mGroupNames.get(position).getName());
-        if (mGroupNames.get(position).getWorkNumber()==null){
-            holder.kahao.setText("未绑定ID卡");
-        }else {
-            holder.kahao.setText("已绑定ID卡: "+mGroupNames.get(position).getWorkNumber());
-        }
+
+        holder.kahao.setText("ID: "+mGroupNames.get(position).getSid()+" 过期时间:"+mGroupNames.get(position).getBirthday());
+
         try {
             if (mGroupNames.get(position).getTeZhengMa()!=null && facePassHandler!=null){
                 Glide.with(context)

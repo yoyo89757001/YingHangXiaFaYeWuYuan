@@ -104,7 +104,7 @@ public class MacUtils {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        if (macSerial == null || "".equals(macSerial)) {
+        if ( "".equals(macSerial)) {
             try {
                 return loadFileAsString("/sys/class/net/eth0/address")
                         .toUpperCase().substring(0, 17);

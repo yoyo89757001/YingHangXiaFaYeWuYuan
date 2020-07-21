@@ -81,6 +81,15 @@ public class ZhiLingBean {
         private String createTime;
         private String updateTime;
         private int operationStatus;//operationStatus: 0删除,1新增,2更新
+        private String equipmentID;
+
+        public String getEquipmentID() {
+            return equipmentID;
+        }
+
+        public void setEquipmentID(String equipmentID) {
+            this.equipmentID = equipmentID;
+        }
 
         public int getOperationStatus() {
             return operationStatus;

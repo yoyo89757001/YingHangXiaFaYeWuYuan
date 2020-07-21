@@ -41,7 +41,7 @@
     </LinearLayout>
 
 
-    <ImageView
+    <com.github.chrisbanes.photoview.PhotoView
         android:id="@+id/iv_delete_group"
         android:layout_width="60dp"
         android:padding="10dp"

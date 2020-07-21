@@ -3,9 +3,7 @@ package megvii.testfacepass.pa.ui;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -15,16 +13,9 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-
-
 import androidx.appcompat.app.AlertDialog;
-
-
 import java.util.ArrayList;
-
 import io.objectbox.Box;
-
-
 import io.objectbox.query.LazyList;
 import mcv.facepass.FacePassException;
 import mcv.facepass.FacePassHandler;

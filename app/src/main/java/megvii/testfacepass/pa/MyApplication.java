@@ -13,6 +13,8 @@ import android.view.WindowManager;
 import com.liulishuo.filedownloader.FileDownloader;
 import com.liulishuo.filedownloader.connection.FileDownloadUrlConnection;
 import com.tencent.bugly.Bugly;
+
+
 import java.io.File;
 import java.io.IOException;
 import java.security.InvalidParameterException;
@@ -23,18 +25,12 @@ import io.objectbox.BoxStore;
 import mcv.facepass.FacePassHandler;
 import megvii.testfacepass.pa.beans.BaoCunBean;
 import megvii.testfacepass.pa.beans.BenDiJiLuBean;
-
 import megvii.testfacepass.pa.beans.DaKaBean;
-
 import megvii.testfacepass.pa.beans.HuiFuBean;
 import megvii.testfacepass.pa.beans.IDCardBean;
-
 import megvii.testfacepass.pa.beans.IDCardTakeBean;
 import megvii.testfacepass.pa.beans.MyObjectBox;
 import megvii.testfacepass.pa.beans.Subject;
-
-
-
 import megvii.testfacepass.pa.dialogall.CommonData;
 import megvii.testfacepass.pa.dialogall.CommonDialogService;
 import megvii.testfacepass.pa.dialogall.ToastUtils;
@@ -111,6 +107,8 @@ public class MyApplication extends Application implements Application.ActivityLi
     public void setFacePassHandler(FacePassHandler facePassHandler1){
         facePassHandler=facePassHandler1;
     }
+
+
 
 
 
@@ -211,9 +209,10 @@ public class MyApplication extends Application implements Application.ActivityLi
             baoCunBean.setDangqianShiJian("2");
             baoCunBean.setTianQi(false);
             baoCunBean.setTishiyu("欢迎光临");
-            baoCunBean.setPort(8090);
+            baoCunBean.setPort(226);
             baoCunBean.setMsrPanDing(true);
             baoCunBean.setConfigModel(1);
+            baoCunBean.setDangqianChengShi2("亮钻");
             baoCunBean.setMoshengrenPanDing(5);
 
             mBoxStore.boxFor(BaoCunBean.class).put(baoCunBean);
@@ -226,6 +225,7 @@ public class MyApplication extends Application implements Application.ActivityLi
                         .readTimeout(15_000) // set read timeout.
                 ))
                 .commit();
+
 
     }
 

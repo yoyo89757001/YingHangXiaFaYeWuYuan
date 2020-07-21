@@ -17,6 +17,7 @@ import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.bigkoo.pickerview.builder.OptionsPickerBuilder;
 import com.bigkoo.pickerview.listener.OnOptionsSelectListener;
 import com.bigkoo.pickerview.view.OptionsPickerView;
@@ -27,15 +28,18 @@ import com.lztek.toolkit.Lztek;
 import com.sdsmdg.tastytoast.TastyToast;
 import com.zyao89.view.zloading.ZLoadingDialog;
 import com.zyao89.view.zloading.Z_TYPE;
+
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONArray;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -122,6 +126,8 @@ public class SheZhiActivity2 extends Activity {
     RelativeLayout rl55;
     @BindView(R.id.banbenhao)
     TextView banbenhao;
+    @BindView(R.id.xueliehao)
+    TextView xueliehao;
     //  JiaZaiDialog dddd;
     private ZLoadingDialog zLoadingDialog;
     private final String group_name = "facepasstestx";
@@ -144,7 +150,7 @@ public class SheZhiActivity2 extends Activity {
     private StringBuilder stringBuilder2 = new StringBuilder();
 
     private boolean isFF = false;
-    private int jiqiType=-1;
+    private int jiqiType = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -159,21 +165,22 @@ public class SheZhiActivity2 extends Activity {
         baoCunBeanDao = MyApplication.myApplication.getBaoCunBeanBox();
         // chengShiIDBeanBox = MyApplication.myApplication.getChengShiIDBeanBox();
         baoCunBean = baoCunBeanDao.get(123456L);
-        if (baoCunBean.getDangqianChengShi2()!=null){
-            switch (baoCunBean.getDangqianChengShi2()){
+        if (baoCunBean.getDangqianChengShi2() != null) {
+            switch (baoCunBean.getDangqianChengShi2()) {
                 case "智连":
-                    jiqiType=0;
+                    jiqiType = 0;
                     break;
                 case "亮钻":
-                    jiqiType=1;
+                    jiqiType = 1;
                     break;
                 case "涂鸦":
-                    jiqiType=2;
+                    jiqiType = 2;
                     break;
             }
         }
 
-        banbenhao.setText("v:"+AppUtils.getVersionName(this));
+        banbenhao.setText("v:" + AppUtils.getVersionName(this));
+        xueliehao.setText("本机序列号:"+baoCunBean.getTuisongDiZhi());
 
         // mFacePassHandler=MyApplication.myApplication.getFacePassHandler();
         EventBus.getDefault().register(this);//订阅
@@ -184,7 +191,7 @@ public class SheZhiActivity2 extends Activity {
         DengUT.getInstance(baoCunBean).closeGreen();
         DengUT.getInstance(baoCunBean).closeRed();
 
-        if (baoCunBean.getDangqianChengShi2()!=null){
+        if (baoCunBean.getDangqianChengShi2() != null) {
             chengshi.setText(baoCunBean.getDangqianChengShi2());
         }
         if (baoCunBean.isHuoTi()) {
@@ -283,20 +290,19 @@ public class SheZhiActivity2 extends Activity {
         sendBroadcast(new Intent("com.android.internal.policy.impl.hideNavigationBar"));
         sendBroadcast(new Intent("com.android.systemui.statusbar.phone.statusclose"));
         try {
-            Lztek lztek=Lztek.create(MyApplication.myApplication);
+            Lztek lztek = Lztek.create(MyApplication.myApplication);
             lztek.navigationBarSlideShow(false);
             lztek.hideNavigationBar();
-        }catch (NoClassDefFoundError e){
+        } catch (NoClassDefFoundError e) {
             e.printStackTrace();
         }
         try {
             HwitManager.HwitSetHideSystemBar(SheZhiActivity2.this);
             HwitManager.HwitSetDisableSlideShowSysBar(0);
-        }catch (NoClassDefFoundError error){
+        } catch (NoClassDefFoundError error) {
             error.printStackTrace();
         }
     }
-
 
 
     @Override
@@ -315,7 +321,7 @@ public class SheZhiActivity2 extends Activity {
 
 
     @OnClick({R.id.rl1, R.id.rl11, R.id.rl12, R.id.rl2, R.id.rl3, R.id.rl4, R.id.rl5, R.id.rl6, R.id.rl7, R.id.rl8, R.id.rl9,
-            R.id.rl13, R.id.rl14, R.id.rl15, R.id.rl16, R.id.rl17, R.id.rl28, R.id.daochu, R.id.rl33,R.id.rl222,R.id.rl55})
+            R.id.rl13, R.id.rl14, R.id.rl15, R.id.rl16, R.id.rl17, R.id.rl28, R.id.daochu, R.id.rl33, R.id.rl222, R.id.rl55})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.rl1: {
@@ -390,7 +396,7 @@ public class SheZhiActivity2 extends Activity {
             case R.id.rl12: {
                 final XiuGaiDiZhiDialog diZhiDialog = new XiuGaiDiZhiDialog(SheZhiActivity2.this);
                 diZhiDialog.setCanceledOnTouchOutside(false);
-                diZhiDialog.setContents("设置端口号", baoCunBean.getPort() + "", null);
+                diZhiDialog.setContents("设置GPIO口", baoCunBean.getPort() + "", null);
                 diZhiDialog.setOnQueRenListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -455,7 +461,7 @@ public class SheZhiActivity2 extends Activity {
                             baoCunBeanDao.put(baoCunBean);
                             Log.d("SheZhiActivity2", "保存激活码成功");
                         }
-                        FaceInit init = new FaceInit(SheZhiActivity2.this,SheZhiActivity2.this);
+                        FaceInit init = new FaceInit(SheZhiActivity2.this, SheZhiActivity2.this);
                         init.init(jihuoma, baoCunBean);
                         bangDingDialog.jiazai();
                     }
@@ -674,8 +680,8 @@ public class SheZhiActivity2 extends Activity {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        List<DaKaBean> daKaBeanList=daKaBeanBox.getAll();
-                        if (daKaBeanList.size()==0){
+                        List<DaKaBean> daKaBeanList = daKaBeanBox.getAll();
+                        if (daKaBeanList.size() == 0) {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -685,8 +691,8 @@ public class SheZhiActivity2 extends Activity {
                             });
 
                         }
-                        SystemClock.sleep(2000 );
-                        File file = new File(MyApplication.SDPATH+File.separator+DateUtils.timeHore(System.currentTimeMillis()+"")+".xls");
+                        SystemClock.sleep(2000);
+                        File file = new File(MyApplication.SDPATH + File.separator + DateUtils.timeHore(System.currentTimeMillis() + "") + ".xls");
                         //文件夹是否已经存在
                         if (file.exists()) {
                             file.delete();
@@ -857,15 +863,15 @@ public class SheZhiActivity2 extends Activity {
         sendBroadcast(new Intent("com.android.internal.policy.impl.showNavigationBar"));
         sendBroadcast(new Intent("com.android.systemui.statusbar.phone.statusopen"));
         try {
-            Lztek lztek=Lztek.create(MyApplication.myApplication);
+            Lztek lztek = Lztek.create(MyApplication.myApplication);
             lztek.navigationBarSlideShow(true);
-        }catch (NoClassDefFoundError e){
+        } catch (NoClassDefFoundError e) {
             e.printStackTrace();
         }
         try {
             HwitManager.HwitSetShowSystemBar(SheZhiActivity2.this);
             HwitManager.HwitSetDisableSlideShowSysBar(0);
-        }catch (NoClassDefFoundError error){
+        } catch (NoClassDefFoundError error) {
             error.printStackTrace();
         }
     }
@@ -1072,7 +1078,6 @@ public class SheZhiActivity2 extends Activity {
         }
 
 
-
         Toast tastyToast = TastyToast.makeText(SheZhiActivity2.this, event, TastyToast.LENGTH_LONG, TastyToast.INFO);
         tastyToast.setGravity(Gravity.CENTER, 0, 0);
         tastyToast.show();
@@ -1162,17 +1167,17 @@ public class SheZhiActivity2 extends Activity {
                 chengshi.setText(tx);
                 baoCunBean.setDangqianChengShi2(tx);
                 baoCunBeanDao.put(baoCunBean);
-                baoCunBean=baoCunBeanDao.get(123456);
-                if (baoCunBean.getDangqianChengShi2()!=null){
-                    switch (baoCunBean.getDangqianChengShi2()){
+                baoCunBean = baoCunBeanDao.get(123456);
+                if (baoCunBean.getDangqianChengShi2() != null) {
+                    switch (baoCunBean.getDangqianChengShi2()) {
                         case "智连":
-                            jiqiType=0;
+                            jiqiType = 0;
                             break;
                         case "亮钻":
-                            jiqiType=1;
+                            jiqiType = 1;
                             break;
                         case "涂鸦":
-                            jiqiType=2;
+                            jiqiType = 2;
                             break;
                     }
                 }
